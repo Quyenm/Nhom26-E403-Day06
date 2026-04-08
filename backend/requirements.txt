@@ -1,0 +1,42 @@
+# ── LLM / Agent ──────────────────────────────────────────────────────────────
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-groq>=0.2.0
+litellm>=1.46.0
+langgraph>=0.2.0
+
+# ── Vector Database – Weaviate ────────────────────────────────────────────────
+weaviate-client>=4.7.0          # Weaviate v4 Python client (gRPC + REST)
+
+# ── Embeddings ────────────────────────────────────────────────────────────────
+# Chọn 1 trong 2:
+# Option A – OpenAI (text-embedding-3-small, cần OPENAI_API_KEY)
+openai>=1.30.0
+
+# Option B – Local SentenceTransformer (hỗ trợ tiếng Việt, không cần API key)
+sentence-transformers>=3.0.0   # dùng paraphrase-multilingual-MiniLM-L12-v2
+
+# ── Web Search ────────────────────────────────────────────────────────────────
+requests>=2.31.0
+ddgs>=7.0.0
+readability-lxml>=0.8.1
+markdownify>=0.13.1
+
+# ── Queue & Cache ─────────────────────────────────────────────────────────────
+redis>=5.0.0
+hiredis>=2.3.2
+
+# ── API Server ────────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+websockets>=13.0
+
+# ── Utils ─────────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+colorama>=0.4.6
+tabulate>=0.9.0
+pydantic>=2.7.0
+
+# Error tracking (optional)
+sentry-sdk[fastapi]>=2.0.0
