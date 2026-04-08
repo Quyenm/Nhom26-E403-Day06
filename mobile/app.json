@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "AI Assistant",
+    "slug": "ai-assistant-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#eef4ff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#eef4ff"
+      }
+    }
+  }
+}
