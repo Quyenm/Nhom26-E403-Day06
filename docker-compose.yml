@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # 1.Backend
+  my-backend:
+    build: ./backend            
+    ports:
+      - "5000:5000"         
+    env_file:
+      - ./backend/.env          
+
+  # 2.Frontend
+  my-frontend:
+    build: ./frontend           
+    ports:
+      - "8080:80"              
+    env_file:
+      - ./frontend/.env.local
+    depends_on:
+      - my-backend              
