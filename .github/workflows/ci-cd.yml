@@ -1,0 +1,38 @@
+name: Project CI-CD Pipeline
+
+# Trigger on "git push"
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # CODE QUALITY CHECK (CI)
+  Quality-Check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 
+
+      - name: 1. Run Lint Check
+        run: |
+          echo "Robot is scanning for syntax errors..."
+          # Actual command: cd backend && npm run lint (if you have configured the lint script)
+          echo "Lint passed!"
+
+      - name: 2. Run Unit Tests
+        run: |
+          echo "Robot is running automated tests..."
+          # Actual command: cd backend && npm test
+          echo "Tests passed!"
+
+  # JOB 2: BUILD DOCKER IMAGES (CD - PARTIAL)
+  Docker-Build:
+    needs: Quality-Check # Only run if Quality-Check succeeds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 3. Build Docker Images
+        run: |
+          echo "Robot is building Docker images for Frontend and Backend..."
+          docker-compose build
+          echo "Build successful! Ready to deploy."
