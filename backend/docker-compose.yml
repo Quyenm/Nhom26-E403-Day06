@@ -1,0 +1,149 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  VinmecPrep AI Backend Stack  –  http://localhost:8000
+#
+#  Quick start:
+#    cp .env.example .env   (dien API keys)
+#    docker-compose up -d
+#    docker-compose exec api python scripts/ingest_medical_data.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+        --save ""
+        --appendonly no
+        --requirepass ${REDIS_PASSWORD:-changeme_redis_pass}
+        --bind 0.0.0.0
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme_redis_pass}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes: [redis_data:/data]
+    networks: [vinmec_net]
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8079:8080"
+      - "127.0.0.1:50051:50051"
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      ENABLE_MODULES: ""
+      DEFAULT_VECTORIZER_MODULE: "none"
+      CLUSTER_HOSTNAME: "weaviate-node1"
+      LOG_LEVEL: "info"
+    volumes: [weaviate_data:/var/lib/weaviate]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/v1/.well-known/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [vinmec_net]
+
+  searxng:
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    environment:
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY:-changeme_searxng_secret}
+      - SEARXNG_BASE_URL=http://searxng:8080
+    volumes:
+      - ./src/searngx_config:/etc/searxng:rw
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks: [vinmec_net]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme_redis_pass}@redis:6379/0
+      - SEARXNG_URL=http://searxng:8080
+      - WEAVIATE_URL=http://weaviate:8080
+      - WEAVIATE_GRPC_HOST=weaviate
+      - WEAVIATE_GRPC_PORT=50051
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_WORKERS=${API_WORKERS:-1}
+      - EMBEDDING_WARMUP=${EMBEDDING_WARMUP:-1}
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      searxng:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    command: >
+      uvicorn src.api.server:app
+        --host 0.0.0.0
+        --port 8000
+        --workers ${API_WORKERS:-1}
+        --log-level info
+        --access-log
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks: [vinmec_net]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme_redis_pass}@redis:6379/0
+      - SEARXNG_URL=http://searxng:8080
+      - WEAVIATE_URL=http://weaviate:8080
+      - WEAVIATE_GRPC_HOST=weaviate
+      - WEAVIATE_GRPC_PORT=50051
+    depends_on:
+      redis:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    command: python -m src.queue.streams
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    networks: [vinmec_net]
+
+networks:
+  vinmec_net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  weaviate_data:
