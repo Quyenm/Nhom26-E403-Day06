@@ -1,0 +1,26 @@
+## AI Product Canvas
+
+|  | Value | Trust | Feasibility |
+|---|---|---|---|
+| **Câu hỏi guide** | User nào? Pain gì? AI giải quyết gì mà cách hiện tại không giải được? | Khi AI sai thì user bị ảnh hưởng thế nào? User biết AI sai bằng cách nào? User sửa bằng cách nào? | Cost bao nhiêu/request? Latency bao lâu? Risk chính là gì? |
+| **Trả lời** | **User:** Bệnh nhân chuẩn bị đi khám tại Vinmec, đặc biệt là người khám lần đầu, người tái khám nhưng không nhớ quy trình, hoặc người nhà đi khám hộ. **Pain:** không biết có cần nhịn ăn không, cần mang giấy tờ gì, nên đặt lịch trước hay đến trực tiếp, cần đến sớm bao lâu. Cách hiện tại là tự đọc thông tin rời rạc trên website hoặc gọi tổng đài, mất 10–15 phút, dễ thiếu sót và không cá nhân hóa theo từng nhu cầu khám. **AI giải quyết:** hỏi ngắn 2–3 câu về lý do khám, loại dịch vụ và tình trạng đặt lịch, sau đó tạo checklist chuẩn bị cá nhân hóa trước khám. | **Khi AI sai:** user có thể chuẩn bị thiếu, đến viện nhưng không làm được xét nghiệm, thiếu giấy tờ hoặc phải chờ lâu hơn. **User biết AI sai bằng cách nào:** checklist không khớp với hiểu biết của họ, khác với thông tin từ hotline/website, hoặc khi hệ thống báo “không chắc”. **User sửa bằng cách nào:** chọn lại loại khám, sửa từng mục checklist, hoặc bấm gọi hotline/lễ tân để xác nhận. Hệ thống phải hiển thị rõ đây là gợi ý hỗ trợ trước khám, không phải chỉ định y khoa. | **Cost:** tính theo token. Với **Alibaba Cloud Qwen3-32B**, giá là **$0.29 / 1M input tokens** và **$0.59 / 1M output tokens**. Giả sử mỗi lượt dùng khoảng **1,000 input tokens** và **500 output tokens** cho flow ngắn gồm 2–3 câu hỏi và một checklist đầu ra, thì cost ước tính là: **(1000/1,000,000 × 0.29) + (500/1,000,000 × 0.59) = $0.000585/request**, xấp xỉ **$0.0006/request**. Với case ngắn hơn, cost có thể khoảng **$0.0003/request**; với case dài hơn, khoảng **$0.001/request**. **Latency:** mục tiêu **<3 giây**. **Risk chính:** user mô tả quá mơ hồ, AI suy diễn quá mức, hoặc trả lời sai ở các mục critical như nhịn ăn và giấy tờ. |
+
+
+**Automation hay augmentation?**  
+☐ Automation — AI làm thay, user không can thiệp  
+☑ Augmentation — AI gợi ý, user quyết định cuối cùng
+
+**Justify:** Augmentation — user thấy checklist gợi ý và tự xác nhận, chấp nhận hoặc sửa lại nếu cần; cost of reject thấp. Nếu AI sai mà user không biết thì rất nguy hiểm trong bối cảnh y tế, nên không phù hợp để automation hoàn toàn.
+
+---
+
+## Learning signal
+
+| # | Câu hỏi | Trả lời |
+|---|---|---|
+| 1 | User correction đi vào đâu? | Mỗi lần user sửa checklist, chọn lại loại khám, hoặc bấm “Thông tin chưa đúng” → ghi correction log theo từng mục như nhịn ăn, giấy tờ, đặt lịch, thời gian đến. |
+| 2 | Product thu signal gì để biết tốt lên hay tệ đi? | Implicit: acceptance rate, completion rate, tỷ lệ user lưu checklist. Explicit: thumbs down / “Thông tin chưa đúng”. Correction: user sửa từng mục checklist hoặc chuyển sang hotline vì AI không đủ tin cậy. |
+| 3 | Data thuộc loại nào? | ☑ User-specific · ☑ Domain-specific · ☐ Real-time · ☑ Human-judgment · ☑ Khác: operational workflow data |
+
+**Có marginal value không?**  
+Có. Model chung có thể biết kiến thức cơ bản như một số xét nghiệm máu cần nhịn ăn, nhưng quy trình chuẩn bị thực tế tại Vinmec, các lỗi user hay gặp, và các correction thực tế là dữ liệu riêng của domain này. Data đó không phải model nào cũng có sẵn, và càng thu thập lâu thì checklist càng sát với vận hành thật hơn.
