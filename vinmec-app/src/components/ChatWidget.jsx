@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Send, MessageCircle, Headphones, Sparkles } from 'lucide-react'
+import {
+  X,
+  Plus,
+  Send,
+  MessageCircle,
+  Headphones,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+} from 'lucide-react'
+import { FALLBACK_ERROR_MESSAGE, sendChatMessage } from '../lib/chatApi'
 
 const INITIAL_MESSAGES = [
   {
@@ -17,40 +27,22 @@ function getTime() {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
-async function fetchAIResponse(userMessage, history) {
-  const systemPrompt = `Bạn là trợ lý ảo của Vinmec – hệ thống y tế hàng đầu Việt Nam. 
-Hãy trả lời bằng tiếng Việt, ngắn gọn (2–4 câu), thân thiện và chuyên nghiệp.
-Tập trung vào: đặt lịch khám, tư vấn dịch vụ y tế, thông tin gói khám sức khỏe, hướng dẫn bệnh nhân.
-Hotline Vinmec: 1900 9999 08. Không bịa đặt thông tin y tế cụ thể.`
-
-  const messages = [
-    ...history
-      .filter((m) => m.id !== 1)
-      .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })),
-    { role: 'user', content: userMessage },
-  ]
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages,
-      }),
-    })
-    const data = await res.json()
-    return data.content?.[0]?.text || 'Xin lỗi, tôi chưa thể xử lý yêu cầu này. Vui lòng thử lại hoặc gọi hotline 1900 9999 08.'
-  } catch {
-    return 'Xin lỗi, đã có lỗi kết nối. Vui lòng thử lại hoặc gọi hotline 1900 9999 08.'
-  }
+function renderSimpleMarkdown(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br />')
 }
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(true)
   const [messages, setMessages] = useState(INITIAL_MESSAGES)
+  const [sessionId, setSessionId] = useState(null)
+  const [feedbackByMessageId, setFeedbackByMessageId] = useState({})
   const [inputVal, setInputVal] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [chipsVisible, setChipsVisible] = useState(true)
@@ -63,16 +55,37 @@ export default function ChatWidget() {
   const sendMessage = async (text) => {
     if (!text.trim() || isTyping) return
     const userMsg = { id: Date.now(), role: 'user', text: text.trim(), time: getTime() }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
+    setMessages((prev) => [...prev, userMsg])
     setInputVal('')
     setChipsVisible(false)
     setIsTyping(true)
 
-    const aiText = await fetchAIResponse(text.trim(), updatedMessages)
-    const aiMsg = { id: Date.now() + 1, role: 'ai', text: aiText, time: getTime() }
-    setMessages((prev) => [...prev, aiMsg])
-    setIsTyping(false)
+    try {
+      const data = await sendChatMessage({
+        message: text.trim(),
+        sessionId,
+      })
+
+      setSessionId(data.session_id)
+
+      const aiMsg = {
+        id: Date.now() + 1,
+        role: 'ai',
+        text: data.reply,
+        time: getTime(),
+      }
+      setMessages((prev) => [...prev, aiMsg])
+    } catch (error) {
+      const aiMsg = {
+        id: Date.now() + 1,
+        role: 'ai',
+        text: error instanceof Error ? error.message : FALLBACK_ERROR_MESSAGE,
+        time: getTime(),
+      }
+      setMessages((prev) => [...prev, aiMsg])
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -80,6 +93,13 @@ export default function ChatWidget() {
       e.preventDefault()
       sendMessage(inputVal)
     }
+  }
+
+  const setFeedback = (messageId, value) => {
+    setFeedbackByMessageId((prev) => ({
+      ...prev,
+      [messageId]: prev[messageId] === value ? null : value,
+    }))
   }
 
   return (
@@ -171,7 +191,42 @@ export default function ChatWidget() {
                       }}
                     >
                       <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#005d98]" />
-                      <p className="text-sm text-[#404751] leading-relaxed pl-3">{msg.text}</p>
+                      <div
+                        className="text-sm text-[#404751] leading-relaxed pl-3 whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(msg.text) }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-end gap-1 pr-1">
+                      <button
+                        type="button"
+                        aria-label="Thích phản hồi này"
+                        onClick={() => setFeedback(msg.id, 'like')}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border transition-colors"
+                        style={{
+                          borderColor:
+                            feedbackByMessageId[msg.id] === 'like' ? '#005d98' : 'rgba(192,199,211,0.5)',
+                          background:
+                            feedbackByMessageId[msg.id] === 'like' ? 'rgba(0,93,152,0.10)' : 'white',
+                          color: feedbackByMessageId[msg.id] === 'like' ? '#005d98' : '#707882',
+                        }}
+                      >
+                        <ThumbsUp size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Không thích phản hồi này"
+                        onClick={() => setFeedback(msg.id, 'dislike')}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border transition-colors"
+                        style={{
+                          borderColor:
+                            feedbackByMessageId[msg.id] === 'dislike' ? '#b54708' : 'rgba(192,199,211,0.5)',
+                          background:
+                            feedbackByMessageId[msg.id] === 'dislike' ? 'rgba(245,124,0,0.12)' : 'white',
+                          color: feedbackByMessageId[msg.id] === 'dislike' ? '#b54708' : '#707882',
+                        }}
+                      >
+                        <ThumbsDown size={12} />
+                      </button>
                     </div>
                     <span className="text-[10px] text-[#707882] ml-3">{msg.time}</span>
                   </div>
@@ -181,7 +236,7 @@ export default function ChatWidget() {
                       className="rounded-2xl rounded-tr-md p-3.5 max-w-[88%]"
                       style={{ background: 'linear-gradient(135deg, #005d98, #0076c0)' }}
                     >
-                      <p className="text-sm text-white leading-relaxed">{msg.text}</p>
+                      <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                     </div>
                     <span className="text-[10px] text-[#707882] mr-2">{msg.time}</span>
                   </div>
