@@ -1,16 +1,89 @@
-# React + Vite
+# Vinmec App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+`vinmec-app` is the React + Vite frontend for the Vinmec landing page and embedded AI chat widget.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Marketing website sections for Vinmec services and brand content.
+- Floating chat widget connected to the hosted Vinmec agent backend.
+- In-memory chat session handling: refreshing the page starts a new conversation.
+- Like/dislike feedback buttons under each bot response.
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- Vite
+- Tailwind CSS
+- Lucide React
 
-## Expanding the ESLint configuration
+## Local development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Create a local env file:
+   ```bash
+   cp .env.example .env.local
+   ```
+2. Confirm the chat API URL in `.env.local`:
+   ```env
+   VITE_CHAT_API_URL=https://vinmec-api.ngtdt204.id.vn/chat
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+5. Open the local app:
+   `http://localhost:5174/`
+
+## Available scripts
+
+- `npm run dev`: start the Vite development server
+- `npm run build`: create a production build
+- `npm run preview`: preview the production build locally
+- `npm run lint`: run ESLint
+
+## Chat API contract
+
+The chat widget sends `POST` requests to the configured backend URL.
+
+Request body:
+
+```json
+{
+  "message": "Tôi cần chuẩn bị gì trước khi khám tim mạch?",
+  "session_id": "",
+  "history": []
+}
+```
+
+Expected response body:
+
+```json
+{
+  "reply": "...",
+  "session_id": "uuid",
+  "blocked": false,
+  "guard_result": "pass"
+}
+```
+
+## Current integration behavior
+
+- The frontend uses `VITE_CHAT_API_URL` instead of calling any browser-side LLM provider.
+- The current default backend endpoint is `https://vinmec-api.ngtdt204.id.vn/chat`.
+- `session_id` is stored only in React state.
+- Quick-reply chips send normal chat requests to the backend.
+- Feedback buttons are UI-only for now and are not sent to the backend.
+
+## Project structure
+
+- `src/App.jsx`: page composition
+- `src/components/ChatWidget.jsx`: floating chat widget UI and feedback buttons
+- `src/lib/chatApi.js`: backend chat client
+
+## Notes
+
+- If you deploy the frontend to another environment, set `VITE_CHAT_API_URL` for that environment.
+- If the backend later tightens CORS, add the frontend origin there as an allowed origin.

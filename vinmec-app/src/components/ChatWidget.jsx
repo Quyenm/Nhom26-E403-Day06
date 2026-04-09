@@ -9,34 +9,24 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { FALLBACK_ERROR_MESSAGE, sendChatMessage } from '../lib/chatApi'
-
-const INITIAL_MESSAGES = [
-  {
-    id: 1,
-    role: 'ai',
-    text: 'Xin chào! Tôi là trợ lý ảo Vinmec. Tôi có thể giúp gì cho bạn hôm nay?',
-    time: '14:02',
-  },
-]
-
-const CHIPS = ['Đặt lịch khám', 'Tra cứu kết quả', 'Tư vấn sức khỏe']
 
 function getTime() {
   const d = new Date()
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
-function renderSimpleMarkdown(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br />')
-}
+const INITIAL_MESSAGES = [
+  {
+    id: 1,
+    role: 'ai',
+    text: 'Xin chào! Tôi là trợ lý ảo Vinmec. Tôi có thể giúp gì cho bạn hôm nay?',
+    time: getTime(),
+  },
+]
+
+const CHIPS = ['Đặt lịch khám', 'Tra cứu kết quả', 'Tư vấn sức khỏe']
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(true)
@@ -124,6 +114,48 @@ export default function ChatWidget() {
         .msg-enter { animation: fadeSlideUp 0.3s ease forwards; }
         .chat-enter { animation: scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .fab-pulse:not(.open) { animation: fabPulse 2.5s ease-in-out infinite; }
+        .bot-markdown > *:first-child { margin-top: 0; }
+        .bot-markdown > *:last-child { margin-bottom: 0; }
+        .bot-markdown p {
+          margin: 0 0 0.8rem;
+        }
+        .bot-markdown h1,
+        .bot-markdown h2,
+        .bot-markdown h3,
+        .bot-markdown h4 {
+          margin: 0 0 0.7rem;
+          color: #171c1f;
+          font-weight: 800;
+          line-height: 1.35;
+        }
+        .bot-markdown h1 { font-size: 1rem; }
+        .bot-markdown h2 { font-size: 0.98rem; }
+        .bot-markdown h3,
+        .bot-markdown h4 { font-size: 0.95rem; }
+        .bot-markdown ul,
+        .bot-markdown ol {
+          margin: 0 0 0.9rem;
+          padding-left: 1.15rem;
+        }
+        .bot-markdown li {
+          margin: 0.25rem 0;
+        }
+        .bot-markdown hr {
+          margin: 0.9rem 0;
+          border: 0;
+          border-top: 1px solid rgba(192,199,211,0.8);
+        }
+        .bot-markdown strong {
+          color: #171c1f;
+          font-weight: 800;
+        }
+        .bot-markdown code {
+          font-size: 0.85em;
+          background: #f0f4f8;
+          color: #005d98;
+          padding: 0.1rem 0.3rem;
+          border-radius: 0.35rem;
+        }
       `}</style>
 
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
@@ -191,10 +223,25 @@ export default function ChatWidget() {
                       }}
                     >
                       <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#005d98]" />
-                      <div
-                        className="text-sm text-[#404751] leading-relaxed pl-3 whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(msg.text) }}
-                      />
+                      <div className="bot-markdown pl-3 text-sm text-[#404751] leading-relaxed">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p>{children}</p>,
+                            h1: ({ children }) => <h1>{children}</h1>,
+                            h2: ({ children }) => <h2>{children}</h2>,
+                            h3: ({ children }) => <h3>{children}</h3>,
+                            h4: ({ children }) => <h4>{children}</h4>,
+                            ul: ({ children }) => <ul>{children}</ul>,
+                            ol: ({ children }) => <ol>{children}</ol>,
+                            li: ({ children }) => <li>{children}</li>,
+                            hr: () => <hr />,
+                            strong: ({ children }) => <strong>{children}</strong>,
+                            code: ({ children }) => <code>{children}</code>,
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                     <div className="flex items-center justify-end gap-1 pr-1">
                       <button
