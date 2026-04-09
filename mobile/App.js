@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { CHAT_ENDPOINT } from '@env';
 import {
   Image,
   KeyboardAvoidingView,
@@ -14,7 +15,6 @@ import {
   View,
 } from 'react-native';
 
-const CHAT_ENDPOINT = 'https://vinmec-api.ngtdt204.id.vn/chat';
 const LOGO_URI = 'https://placehold.co/220x72/ffffff/0f5ea8/png?text=VINMEC';
 const BANNER_URI =
   'https://placehold.co/1200x640/f8dbe6/0f5ea8/png?text=VINMEC+Mother+%26+Baby';
