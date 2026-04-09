@@ -42,3 +42,8 @@ API_PORT         = int(os.getenv("API_PORT", "8000"))
 # VD: ALLOWED_ORIGINS=https://yourapp.vinmec.com,https://admin.vinmec.com
 _origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:8890,http://localhost:3000")
 ALLOWED_ORIGINS  = [o.strip() for o in _origins_raw.split(",") if o.strip()]
+
+# ── Trainer ───────────────────────────────────────────────────────────────────
+# Key để bảo vệ GET /feedback, GET /feedback/search, GET /feedback/stats.
+# Set trong .env: TRAINER_API_KEY=some_long_random_secret
+TRAINER_API_KEY = os.getenv("TRAINER_API_KEY", "").strip()

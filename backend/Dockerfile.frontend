@@ -1,0 +1,18 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /build
+
+# Copy frontend source
+COPY src/frontend/ .
+
+# Nếu có package.json (Vite/React build), chạy build
+# Nếu không có, chỉ copy static files
+RUN if [ -f package.json ]; then \
+        npm ci && npm run build && mv dist /out; \
+    else \
+        mkdir -p /out && cp -r . /out; \
+    fi
+
+# ── Final stage: chỉ chứa static files ───────────────────────────────────────
+FROM busybox:latest
+COPY --from=builder /out /usr/share/nginx/html
