@@ -1,4 +1,6 @@
-﻿const FALLBACK_ERROR_MESSAGE = 'Xin lỗi, đã có lỗi kết nối. Vui lòng thử lại hoăc gọi hotline 1900 54 61 54.'
+﻿const DEFAULT_API_URL = 'https://vinmec-api-windows.ngtdt204.id.vn'
+
+const FALLBACK_ERROR_MESSAGE = 'Xin lỗi, đã có lỗi kết nối. Vui lòng thử lại hoăc gọi hotline 1900 54 61 54.'
 
 function getApiBaseUrl() {
   const configured = import.meta.env.VITE_API_URL?.trim()
@@ -6,7 +8,7 @@ function getApiBaseUrl() {
     return configured.replace(/\/$/, '')
   }
 
-  return '/api'
+  return DEFAULT_API_URL
 }
 
 export async function sendChatMessage({ message, sessionId, history = [] }) {

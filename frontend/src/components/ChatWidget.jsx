@@ -27,15 +27,124 @@ function getTime() {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
-function renderSimpleMarkdown(text) {
+function escapeHtml(text) {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function toSafeUrl(url) {
+  const trimmed = url.trim()
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)) {
+      return trimmed
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function formatInlineMarkdown(text) {
+  const linkTokens = []
+
+  const withLinkTokens = text.replace(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    (_, label, url) => {
+      const safeUrl = toSafeUrl(url)
+      if (!safeUrl) {
+        return escapeHtml(`[${label}](${url})`)
+      }
+
+      const token = `__LINK_${linkTokens.length}__`
+      linkTokens.push({
+        token,
+        html: `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer noopener">${escapeHtml(label)}</a>`,
+      })
+      return token
+    }
+  )
+
+  let formatted = escapeHtml(withLinkTokens)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br />')
+
+  for (const { token, html } of linkTokens) {
+    formatted = formatted.replace(token, html)
+  }
+
+  return formatted
+}
+
+function renderSimpleMarkdown(text) {
+  const lines = text.split('\n')
+  const html = []
+  let listType = null
+
+  const closeList = () => {
+    if (listType) {
+      html.push(`</${listType}>`)
+      listType = null
+    }
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+
+    if (!line) {
+      closeList()
+      continue
+    }
+
+    if (/^(-{3,}|\*{3,})$/.test(line)) {
+      closeList()
+      html.push('<hr />')
+      continue
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/)
+    if (headingMatch) {
+      closeList()
+      const level = Math.min(headingMatch[1].length, 6)
+      html.push(`<h${level}>${formatInlineMarkdown(headingMatch[2])}</h${level}>`)
+      continue
+    }
+
+    const orderedMatch = line.match(/^(\d+)\.\s+(.+)$/)
+    if (orderedMatch) {
+      if (listType !== 'ol') {
+        closeList()
+        listType = 'ol'
+        html.push('<ol>')
+      }
+      html.push(`<li>${formatInlineMarkdown(orderedMatch[2])}</li>`)
+      continue
+    }
+
+    const unorderedMatch = line.match(/^[-*]\s+(.+)$/)
+    if (unorderedMatch) {
+      if (listType !== 'ul') {
+        closeList()
+        listType = 'ul'
+        html.push('<ul>')
+      }
+      html.push(`<li>${formatInlineMarkdown(unorderedMatch[1])}</li>`)
+      continue
+    }
+
+    closeList()
+    html.push(`<p>${formatInlineMarkdown(line)}</p>`)
+  }
+
+  closeList()
+  return html.join('')
 }
 
 export default function ChatWidget() {
@@ -124,6 +233,93 @@ export default function ChatWidget() {
         .msg-enter { animation: fadeSlideUp 0.3s ease forwards; }
         .chat-enter { animation: scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .fab-pulse:not(.open) { animation: fabPulse 2.5s ease-in-out infinite; }
+        .chat-markdown p,
+        .chat-markdown ul,
+        .chat-markdown ol,
+        .chat-markdown h1,
+        .chat-markdown h2,
+        .chat-markdown h3,
+        .chat-markdown h4,
+        .chat-markdown h5,
+        .chat-markdown h6 {
+          margin: 0;
+        }
+        .chat-markdown p + p,
+        .chat-markdown p + ul,
+        .chat-markdown p + ol,
+        .chat-markdown ul + p,
+        .chat-markdown ol + p,
+        .chat-markdown hr + h1,
+        .chat-markdown hr + h2,
+        .chat-markdown hr + h3,
+        .chat-markdown hr + h4,
+        .chat-markdown hr + h5,
+        .chat-markdown hr + h6,
+        .chat-markdown hr + p,
+        .chat-markdown hr + ul,
+        .chat-markdown hr + ol,
+        .chat-markdown h1 + p,
+        .chat-markdown h2 + p,
+        .chat-markdown h3 + p,
+        .chat-markdown h4 + p,
+        .chat-markdown h5 + p,
+        .chat-markdown h6 + p,
+        .chat-markdown h1 + ul,
+        .chat-markdown h2 + ul,
+        .chat-markdown h3 + ul,
+        .chat-markdown h4 + ul,
+        .chat-markdown h5 + ul,
+        .chat-markdown h6 + ul,
+        .chat-markdown h1 + ol,
+        .chat-markdown h2 + ol,
+        .chat-markdown h3 + ol,
+        .chat-markdown h4 + ol,
+        .chat-markdown h5 + ol,
+        .chat-markdown h6 + ol {
+          margin-top: 0.55rem;
+        }
+        .chat-markdown ul,
+        .chat-markdown ol {
+          padding-left: 1.1rem;
+        }
+        .chat-markdown li + li {
+          margin-top: 0.3rem;
+        }
+        .chat-markdown h1,
+        .chat-markdown h2,
+        .chat-markdown h3,
+        .chat-markdown h4,
+        .chat-markdown h5,
+        .chat-markdown h6 {
+          color: #171c1f;
+          font-weight: 700;
+          line-height: 1.4;
+        }
+        .chat-markdown h1 { font-size: 1.125rem; }
+        .chat-markdown h2 { font-size: 1.05rem; }
+        .chat-markdown h3 { font-size: 1rem; }
+        .chat-markdown hr {
+          margin: 0.75rem 0;
+          border: 0;
+          border-top: 1px solid rgba(192,199,211,0.8);
+        }
+        .chat-markdown code {
+          padding: 0.12rem 0.35rem;
+          border-radius: 0.35rem;
+          background: rgba(0, 93, 152, 0.08);
+          color: #005d98;
+          font-size: 0.9em;
+        }
+        .chat-markdown a {
+          color: #005d98;
+          font-weight: 600;
+          text-decoration: underline;
+          text-underline-offset: 0.12em;
+          word-break: break-word;
+        }
+        .chat-markdown a:hover {
+          color: #0076c0;
+        }
       `}</style>
 
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
@@ -192,7 +388,7 @@ export default function ChatWidget() {
                     >
                       <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#005d98]" />
                       <div
-                        className="text-sm text-[#404751] leading-relaxed pl-3 whitespace-pre-wrap"
+                        className="chat-markdown text-sm text-[#404751] leading-relaxed pl-3"
                         dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(msg.text) }}
                       />
                     </div>
