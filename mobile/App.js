@@ -41,6 +41,24 @@ function formatTime(date = new Date()) {
   });
 }
 
+function markdownToPlainText(content = '') {
+  return content
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, '').trim())
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, '- ')
+    .replace(/^\s*\d+\.\s+/gm, '- ')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function GlobeIcon() {
   return (
     <View style={styles.roundIcon}>
@@ -95,6 +113,7 @@ function ChatFabIcon() {
 
 function MessageBubble({ role, text, time, screenWidth }) {
   const isUser = role === 'user';
+  const displayText = isUser ? text : markdownToPlainText(text);
 
   return (
     <View style={[styles.messageRow, isUser ? styles.userRow : styles.assistantRow]}>
@@ -107,7 +126,7 @@ function MessageBubble({ role, text, time, screenWidth }) {
       >
         {!isUser ? <View style={styles.assistantAccent} /> : null}
         <Text style={[styles.messageText, isUser ? styles.userMessageText : styles.assistantMessageText]}>
-          {text}
+          {displayText}
         </Text>
       </View>
       <Text style={[styles.messageTime, isUser ? styles.userTime : styles.assistantTime]}>{time}</Text>
@@ -119,6 +138,7 @@ export default function App() {
   const { width } = useWindowDimensions();
   const bannerHeight = Math.min(Math.max(width * 0.38, 150), 220);
   const scrollViewRef = useRef(null);
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [message, setMessage] = useState('');
   const [reply, setReply] = useState('');
   const [error, setError] = useState('');
@@ -137,6 +157,10 @@ export default function App() {
     setError('');
     setLoading(false);
     setMessages(INITIAL_MESSAGES);
+  };
+
+  const toggleChat = () => {
+    setIsChatOpen((currentValue) => !currentValue);
   };
 
   const handleSendMessage = async (overrideText) => {
@@ -164,7 +188,9 @@ export default function App() {
         message: trimmedMessage,
       });
 
-      const nextReply = response.data?.reply || 'Khong co du lieu reply tu server.';
+      const nextReply = markdownToPlainText(
+        response.data?.reply || 'Khong co du lieu reply tu server.'
+      );
 
       setReply(nextReply);
       setMessages((currentMessages) => [
@@ -243,7 +269,8 @@ export default function App() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.chatCard}>
+          {isChatOpen ? (
+            <View style={styles.chatCard}>
             <View style={styles.chatHeader}>
               <View style={styles.chatHeaderLeft}>
                 <View style={styles.avatarWrap}>
@@ -262,7 +289,7 @@ export default function App() {
                 </View>
               </View>
 
-              <TouchableOpacity onPress={resetConversation} activeOpacity={0.75}>
+              <TouchableOpacity onPress={toggleChat} activeOpacity={0.75}>
                 <Text style={styles.closeButton}>×</Text>
               </TouchableOpacity>
             </View>
@@ -360,7 +387,10 @@ export default function App() {
 
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
             </View>
-          </View>
+            </View>
+          ) : (
+            <View style={styles.chatClosedSpacer} />
+          )}
 
           <View style={styles.footer}>
             <ShieldIcon />
@@ -374,7 +404,11 @@ export default function App() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.fabButton} activeOpacity={0.88}>
+          <TouchableOpacity
+            style={[styles.fabButton, isChatOpen ? null : styles.fabButtonCollapsed]}
+            activeOpacity={0.88}
+            onPress={toggleChat}
+          >
             <ChatFabIcon />
           </TouchableOpacity>
         </View>
@@ -564,6 +598,9 @@ const styles = StyleSheet.create({
       height: 12,
     },
     elevation: 8,
+  },
+  chatClosedSpacer: {
+    flex: 1,
   },
   chatHeader: {
     flexDirection: 'row',
@@ -873,6 +910,9 @@ const styles = StyleSheet.create({
       height: 10,
     },
     elevation: 8,
+  },
+  fabButtonCollapsed: {
+    bottom: 24,
   },
   fabIcon: {
     width: 28,
