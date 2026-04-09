@@ -1,5 +1,4 @@
-﻿const FALLBACK_ERROR_MESSAGE = 'An error occurred. Please try again or call 1900 54 61 54.'
-
+﻿const FALLBACK_ERROR_MESSAGE = 'Xin lỗi, đã có lỗi kết nối. Vui lòng thử lại hoăc gọi hotline 1900 54 61 54.'
 function getApiBaseUrl() {
   const configured = import.meta.env.VITE_API_URL?.trim()
   if (configured) {
