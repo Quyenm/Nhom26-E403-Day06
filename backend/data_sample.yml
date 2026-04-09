@@ -1,0 +1,121 @@
+meta:
+  project: VinmecPrep AI
+  purpose: sample_data_for_backend_rag
+  generated_from:
+    - src/rag/medical_data.py
+    - src/rag/medical_data_extra.py
+    - src/rag/weaviate_client.py
+
+specialties:
+  - name: "Tim mach"
+    name_en: "Cardiology"
+    department: "Noi Tim Mach"
+    fasting: "partial"
+    fasting_hours: 4
+    documents:
+      - "CMND/CCCD"
+      - "The BHYT (neu co)"
+      - "ECG, sieu am tim cu neu co"
+      - "Danh sach thuoc dang dung"
+    booking_required: true
+    estimated_duration_min: 90
+    notes: "Nen nhin an 4 tieng neu can xet nghiem mau hoac sieu am tim mach."
+    tags: ["tim mach", "cardiology", "huyet ap", "nhip tim", "heart"]
+
+  - name: "Nhi khoa"
+    name_en: "Pediatrics"
+    department: "Nhi"
+    fasting: "none"
+    fasting_hours: 0
+    documents:
+      - "CMND/CCCD cua cha/mat"
+      - "Giay khai sinh hoac ho khau cua tre"
+      - "So tiem chung"
+      - "The BHYT tre em (neu co)"
+    booking_required: true
+    estimated_duration_min: 45
+    notes: "Mang theo so tiem chung va tom tat benh ly cua tre."
+    tags: ["nhi", "tre em", "pediatrics", "so tiem chung"]
+
+  - name: "Tieu hoa - Gan mat"
+    name_en: "Gastroenterology & Hepatology"
+    department: "Noi Tieu Hoa"
+    fasting: "required"
+    fasting_hours: 8
+    documents:
+      - "CMND/CCCD"
+      - "The BHYT (neu co)"
+      - "Ket qua noi soi, sieu am bung cu"
+      - "Ket qua xet nghiem mau neu co"
+    booking_required: true
+    estimated_duration_min: 90
+    notes: "Thuong can nhin an 8 tieng neu co noi soi hoac sieu am bung."
+    tags: ["tieu hoa", "gan", "mat", "noi soi", "da day", "dai trang"]
+
+  - name: "Mat - Nhan khoa"
+    name_en: "Ophthalmology"
+    department: "Mat"
+    fasting: "none"
+    fasting_hours: 0
+    documents:
+      - "CMND/CCCD"
+      - "The BHYT (neu co)"
+      - "Kinh dang deo (neu co)"
+      - "Don kinh cu"
+    booking_required: true
+    estimated_duration_min: 45
+    notes: "Khong deo kinh ap trong it nhat 2 ngay truoc do khuc xa."
+    tags: ["mat", "nhan khoa", "ophthalmology", "kinh", "can thi"]
+
+procedures:
+  - name: "Xet nghiem mau tong quat"
+    name_en: "Complete Blood Count & Biochemistry"
+    procedure_type: "lab"
+    fasting: "required"
+    fasting_hours: 8
+    preparation: "Nhin an toi thieu 8 gio, uong nuoc loc van duoc."
+    duration_min: 30
+    contraindications: "Khong co."
+    notes: "Nen lay mau buoi sang som de ket qua on dinh hon."
+    tags: ["xet nghiem mau", "cbc", "sinh hoa mau", "glucose", "lipid"]
+
+  - name: "Sieu am tuyen giap"
+    name_en: "Thyroid Ultrasound"
+    procedure_type: "imaging"
+    fasting: "none"
+    fasting_hours: 0
+    preparation: "Khong can chuan bi dac biet, mac ao co rong."
+    duration_min: 20
+    contraindications: "Khong co."
+    notes: "Danh gia kich thuoc, cau truc va nhan tuyen giap."
+    tags: ["sieu am", "tuyen giap", "thyroid", "TIRADS"]
+
+  - name: "Nghiem phap dung nap glucose (OGTT)"
+    name_en: "Oral Glucose Tolerance Test (OGTT)"
+    procedure_type: "lab"
+    fasting: "required"
+    fasting_hours: 8
+    preparation: "Nhin an 8-10 gio, den dung gio va ngoi nghi trong qua trinh lam test."
+    duration_min: 135
+    contraindications: "Duong huyet luc doi qua cao co the khong phu hop."
+    notes: "Dung trong tam soat tieu duong va tieu duong thai ky."
+    tags: ["OGTT", "glucose", "tieu duong", "thai ky"]
+
+documents:
+  - title: "Giay to can mang khi den Vinmec"
+    content: "Can mang CMND/CCCD hoac ho chieu, the BHYT neu co, ket qua xet nghiem cu, va danh sach thuoc dang dung."
+    category: "Huong dan chung"
+    source: "Vinmec Patient Guide"
+    tags: ["giay to", "documents", "BHYT", "ho so"]
+
+  - title: "Quy dinh nhin an truoc khi kham va xet nghiem"
+    content: "Nhin an thuong duoc ap dung cho xet nghiem duong huyet, mo mau, noi soi da day, va mot so thu tuc chan doan hinh anh."
+    category: "Huong dan nhin an"
+    source: "Vinmec Clinical Guidelines"
+    tags: ["nhin an", "fasting", "xet nghiem", "noi soi"]
+
+  - title: "Huong dan dat lich kham tai Vinmec"
+    content: "Co the dat lich qua app MyVinmec, website, tong dai 1900 54 61 54, hoac den truc tiep quay dang ky."
+    category: "Dat lich"
+    source: "Vinmec Booking Guide"
+    tags: ["dat lich", "booking", "MyVinmec", "tong dai"]
