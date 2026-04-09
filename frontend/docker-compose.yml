@@ -7,8 +7,6 @@ services:
         - linux/amd64
         - linux/arm64
     container_name: vinmec_frontend
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "7777:80"
     restart: unless-stopped
