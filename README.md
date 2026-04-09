@@ -22,8 +22,6 @@ VinmecPrep AI is a multi-module healthcare assistant project that helps patients
 
 ## 1. Project Overview
 
-**English**
-
 This repository contains a complete prototype for an AI-powered Vinmec assistant:
 
 - A Python/FastAPI backend for chat APIs, feedback APIs, queue-based processing, and RAG.
@@ -50,8 +48,6 @@ The assistant is designed to answer narrow, operational healthcare questions saf
 
 ### Important note
 
-**English**
-
 There are two Docker Compose entry points:
 
 - `docker-compose.yml` at the repository root: a simpler setup for backend + frontend only.
@@ -60,7 +56,6 @@ There are two Docker Compose entry points:
 
 ## 3. Architecture
 
-**English**
 
 High-level request flow:
 
@@ -133,8 +128,6 @@ Web / Mobile
 - Nginx
 
 ## 6. Quick Start
-
-**English**
 
 Choose one of these paths:
 
